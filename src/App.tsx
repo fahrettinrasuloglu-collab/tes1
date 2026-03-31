@@ -23,10 +23,38 @@ import { cn } from './services/utils';
 type View = 'start' | 'loading' | 'game';
 
 const ROLES = [
-  { id: 'scientist', name: 'Çılgın Bilim İnsanı', icon: '🧪', desc: 'Laboratuvar kazaları ve kuantum sıçramaları.', color: 'emerald' },
-  { id: 'historian', name: 'Zaman Gezgini Tarihçi', icon: '📜', desc: 'Geçmişin tozlu sayfalarında bir macera.', color: 'amber' },
-  { id: 'explorer', name: 'Galaktik Kaşif', icon: '🚀', desc: 'Bilinmeyen gezegenler ve uzaylı medeniyetler.', color: 'indigo' },
-  { id: 'detective', name: 'Siber Dedektif', icon: '🔍', desc: 'Neon ışıklı sokaklarda gizemli vakalar.', color: 'fuchsia' },
+  { 
+    id: 'scientist', 
+    name: 'Çılgın Bilim İnsanı', 
+    icon: '🧪', 
+    desc: 'Laboratuvar kazaları ve kuantum sıçramaları.', 
+    color: 'emerald',
+    fact: 'Kuantum dolanıklık, iki parçacığın aralarındaki mesafe ne olursa olsun birbirlerini anında etkilemesi durumudur. Einstein buna "uzaktan ürkütücü eylem" demiştir.'
+  },
+  { 
+    id: 'historian', 
+    name: 'Zaman Gezgini Tarihçi', 
+    icon: '📜', 
+    desc: 'Geçmişin tozlu sayfalarında bir macera.', 
+    color: 'amber',
+    fact: 'Antik Mısırlılar, antibiyotiklerin keşfinden binlerce yıl önce enfeksiyonları tedavi etmek için küflü ekmek kullanıyorlardı.'
+  },
+  { 
+    id: 'explorer', 
+    name: 'Galaktik Kaşif', 
+    icon: '🚀', 
+    desc: 'Bilinmeyen gezegenler ve uzaylı medeniyetler.', 
+    color: 'indigo',
+    fact: 'Venüs gezegeninde bir gün, bir yıldan daha uzun sürer. Kendi ekseni etrafında o kadar yavaş döner ki güneşin doğuşu 117 dünya günü sürer.'
+  },
+  { 
+    id: 'detective', 
+    name: 'Siber Dedektif', 
+    icon: '🔍', 
+    desc: 'Neon ışıklı sokaklarda gizemli vakalar.', 
+    color: 'fuchsia',
+    fact: 'Dünyanın ilk bilgisayar programcısı bir kadındı: Ada Lovelace. 1843 yılında Charles Babbage\'ın Analitik Makinesi için bir algoritma yazmıştı.'
+  },
 ];
 
 export default function App() {
@@ -36,6 +64,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [educationalFact, setEducationalFact] = useState<string | null>(null);
+  const [showRoleFact, setShowRoleFact] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeRole = ROLES.find(r => r.id === selectedRoleId);
@@ -272,13 +301,21 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                 {ROLES.map((role) => (
-                  <motion.button
+                  <motion.div
                     key={role.id}
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleStartGame(role.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleStartGame(role.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                      "group relative p-8 bg-white/5 border border-white/10 rounded-[2rem] text-left transition-all duration-500 overflow-hidden",
+                      "group relative p-8 bg-white/5 border border-white/10 rounded-[2rem] text-left transition-all duration-500 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20",
                       role.color === 'emerald' && "hover:border-emerald-500/50 hover:bg-emerald-500/5",
                       role.color === 'amber' && "hover:border-amber-500/50 hover:bg-amber-500/5",
                       role.color === 'indigo' && "hover:border-indigo-500/50 hover:bg-indigo-500/5",
@@ -295,17 +332,64 @@ export default function App() {
                       {role.icon}
                     </div>
                     <div className="relative z-10">
-                      <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors duration-500",
-                        role.color === 'emerald' && "bg-emerald-500/20 text-emerald-400",
-                        role.color === 'amber' && "bg-amber-500/20 text-amber-400",
-                        role.color === 'indigo' && "bg-indigo-500/20 text-indigo-400",
-                        role.color === 'fuchsia' && "bg-fuchsia-500/20 text-fuchsia-400"
-                      )}>
-                        <Sparkles className="w-6 h-6" />
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors duration-500",
+                          role.color === 'emerald' && "bg-emerald-500/20 text-emerald-400",
+                          role.color === 'amber' && "bg-amber-500/20 text-amber-400",
+                          role.color === 'indigo' && "bg-indigo-500/20 text-indigo-400",
+                          role.color === 'fuchsia' && "bg-fuchsia-500/20 text-fuchsia-400"
+                        )}>
+                          <Sparkles className="w-6 h-6" />
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowRoleFact(showRoleFact === role.id ? null : role.id);
+                          }}
+                          className={cn(
+                            "p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group/info",
+                            showRoleFact === role.id && "bg-white/20 border-white/30"
+                          )}
+                        >
+                          <Info className={cn(
+                            "w-4 h-4 transition-colors",
+                            showRoleFact === role.id ? "text-white" : "text-zinc-500 group-hover/info:text-zinc-300"
+                          )} />
+                        </button>
                       </div>
                       <h3 className="text-2xl font-bold mb-2 group-hover:tracking-tight transition-all">{role.name}</h3>
-                      <p className="text-sm text-zinc-500 leading-relaxed max-w-[80%]">{role.desc}</p>
+                      
+                      <AnimatePresence mode="wait">
+                        {showRoleFact === role.id ? (
+                          <motion.div
+                            key="fact"
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className={cn(
+                              "text-sm leading-relaxed p-3 rounded-xl bg-white/5 border border-white/10 italic",
+                              role.color === 'emerald' && "text-emerald-300",
+                              role.color === 'amber' && "text-amber-300",
+                              role.color === 'indigo' && "text-indigo-300",
+                              role.color === 'fuchsia' && "text-fuchsia-300"
+                            )}
+                          >
+                            <span className="font-bold uppercase text-[10px] block mb-1 opacity-50 tracking-widest">Biliyor muydun?</span>
+                            {role.fact}
+                          </motion.div>
+                        ) : (
+                          <motion.p 
+                            key="desc"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="text-sm text-zinc-500 leading-relaxed max-w-[80%]"
+                          >
+                            {role.desc}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                     </div>
                     <div className={cn(
                       "mt-6 flex items-center gap-2 text-xs font-mono uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0",
@@ -317,7 +401,7 @@ export default function App() {
                       <span>Maceraya Başla</span>
                       <ChevronRight className="w-4 h-4" />
                     </div>
-                  </motion.button>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
