@@ -1,6 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export interface GameState {
   role: string;
@@ -24,6 +35,7 @@ export interface AIResponse {
 
 export async function generateImage(prompt: string): Promise<string | undefined> {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
       contents: [{ parts: [{ text: `A vibrant, cinematic, high-quality digital art scene for an RPG game: ${prompt}. Style: Atmospheric, detailed, immersive.` }] }],
@@ -41,6 +53,7 @@ export async function generateImage(prompt: string): Promise<string | undefined>
 }
 
 export async function generateScenario(role: string): Promise<Scenario> {
+  const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
@@ -63,6 +76,7 @@ export async function generateScenario(role: string): Promise<Scenario> {
 }
 
 export async function chatWithAI(gameState: GameState, userInput: string): Promise<AIResponse> {
+  const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [
