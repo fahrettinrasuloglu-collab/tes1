@@ -131,6 +131,7 @@ export default function App() {
   }, [gameState?.history]);
 
   const handleStartGame = async (roleId: string) => {
+    console.log('Starting game for role:', roleId);
     if (selectedRoleId) return;
     setSelectedRoleId(roleId);
     setView('loading');
@@ -191,7 +192,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans selection:bg-white/20 overflow-hidden flex flex-col">
+    <div className="h-[100dvh] bg-[#050505] text-zinc-100 font-sans selection:bg-white/20 overflow-hidden flex flex-col">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <AnimatePresence>
@@ -293,7 +294,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="flex-1 flex flex-col items-center justify-center p-6 max-w-5xl mx-auto w-full"
+              className="flex-1 flex flex-col items-center justify-start sm:justify-center p-6 max-w-5xl mx-auto w-full overflow-y-auto scrollbar-hide"
             >
               <div className="text-center mb-16">
                 <motion.div
@@ -314,13 +315,14 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full pb-12">
                 {ROLES.map((role) => (
                   <motion.div
                     key={role.id}
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onTap={() => handleStartGame(role.id)}
+                    onClick={() => handleStartGame(role.id)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
