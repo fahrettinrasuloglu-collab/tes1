@@ -66,6 +66,13 @@ export default function App() {
   const [educationalFact, setEducationalFact] = useState<string | null>(null);
   const [showRoleFact, setShowRoleFact] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (view === 'game') {
+      inputRef.current?.focus();
+    }
+  }, [view]);
 
   const activeRole = ROLES.find(r => r.id === selectedRoleId);
   const roleColor = activeRole?.color || 'orange';
@@ -124,6 +131,7 @@ export default function App() {
   }, [gameState?.history]);
 
   const handleStartGame = async (roleId: string) => {
+    if (selectedRoleId) return;
     setSelectedRoleId(roleId);
     setView('loading');
     try {
@@ -146,6 +154,8 @@ export default function App() {
       setView('game');
     } catch (error) {
       console.error("Oyun başlatılamadı:", error);
+      alert("Oyun başlatılırken bir sorun oluştu. Lütfen tekrar deneyin.");
+      setSelectedRoleId(null);
       setView('start');
     }
   };
@@ -233,25 +243,25 @@ export default function App() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 border-b border-white/5 bg-black/40 backdrop-blur-2xl px-6 py-4 flex items-center justify-between">
+      <header className="relative z-10 border-b border-white/5 bg-black/40 backdrop-blur-2xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <motion.div 
             whileHover={{ scale: 1.1, rotate: 5 }}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500",
+              "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-2xl transition-all duration-500",
               view === 'start' ? "bg-orange-500 shadow-orange-500/40" : `${activeColors.bg} ${activeColors.shadow.replace('/20', '/40')}`
             )}
           >
-            <Sparkles className={cn("w-6 h-6", view === 'start' ? "text-black" : "text-white")} />
+            <Sparkles className={cn("w-4 h-4 sm:w-6 sm:h-6", view === 'start' ? "text-black" : "text-white")} />
           </motion.div>
-          <h1 className="text-xl font-black tracking-tighter uppercase italic font-serif">
+          <h1 className="text-lg sm:text-xl font-black tracking-tighter uppercase italic font-serif">
             Chronos: <span className={cn("transition-colors duration-500", view === 'start' ? "text-orange-500" : activeColors.text)}>Bilgi Avcısı</span>
           </h1>
         </div>
         
         {view === 'game' && gameState && (
-          <div className="flex items-center gap-6 text-xs font-mono uppercase tracking-widest text-zinc-400">
-            <div className={cn("flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border transition-colors duration-500", activeColors.border)}>
+          <div className="flex items-center gap-2 sm:gap-6 text-xs font-mono uppercase tracking-widest text-zinc-400">
+            <div className={cn("flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/5 rounded-full border transition-colors duration-500", activeColors.border)}>
               <User className={cn("w-3 h-3", activeColors.text)} />
               <span className="text-white">{gameState.role}</span>
             </div>
@@ -259,13 +269,18 @@ export default function App() {
               <MapPin className="w-3 h-3 text-blue-400" />
               <span className="text-white">{gameState.location}</span>
             </div>
-            <button 
-              onClick={() => setView('start')}
-              className="hover:text-white transition-colors flex items-center gap-2 group"
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+              onTap={() => {
+                setView('start');
+                setSelectedRoleId(null);
+                setGameState(null);
+              }}
+              className="hover:text-white transition-colors flex items-center gap-2 group p-2"
             >
               <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
-              <span>YENİLE</span>
-            </button>
+              <span className="hidden sm:inline">YENİLE</span>
+            </motion.button>
           </div>
         )}
       </header>
@@ -288,7 +303,7 @@ export default function App() {
                 >
                   Dinamik Rol Yapma Deneyimi
                 </motion.div>
-                <h2 className="text-6xl sm:text-8xl font-serif italic font-bold mb-8 leading-[0.9] tracking-tighter">
+                <h2 className="text-5xl sm:text-8xl font-serif italic font-bold mb-8 leading-[0.9] tracking-tighter">
                   Kendi Hikayeni <br /> 
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-500 to-amber-500 animate-gradient-x">
                     İnşa Et.
@@ -392,7 +407,8 @@ export default function App() {
                       </AnimatePresence>
                     </div>
                     <div className={cn(
-                      "mt-6 flex items-center gap-2 text-xs font-mono uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0",
+                      "mt-6 flex items-center gap-2 text-xs font-mono uppercase tracking-widest transition-all",
+                      "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-x-[-10px] sm:group-hover:translate-x-0",
                       role.color === 'emerald' && "text-emerald-400",
                       role.color === 'amber' && "text-amber-400",
                       role.color === 'indigo' && "text-indigo-400",
@@ -415,7 +431,7 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-center p-6"
             >
-              <div className="relative w-32 h-32 mb-12">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 mb-12">
                 <div className={cn("absolute inset-0 border-4 rounded-full opacity-20", activeColors.border.replace('/30', ''))} />
                 <motion.div 
                   animate={{ rotate: 360 }}
@@ -439,26 +455,26 @@ export default function App() {
               className="flex-1 flex flex-col h-full max-w-6xl mx-auto w-full overflow-hidden"
             >
               {/* Chat Area */}
-              <div className="flex-1 overflow-y-auto p-8 space-y-10 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-10 scrollbar-hide">
                 {gameState.history.map((msg, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
-                      "flex gap-6 max-w-[80%]",
+                      "flex gap-3 sm:gap-6 max-w-[90%] sm:max-w-[80%]",
                       msg.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto"
                     )}
                   >
                     <div className={cn(
-                      "w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border shadow-2xl transition-all duration-500",
+                      "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex-shrink-0 flex items-center justify-center border shadow-2xl transition-all duration-500",
                       msg.role === 'user' 
                         ? `${activeColors.bg} ${activeColors.border} ${activeColors.shadow.replace('/20', '/40')}` 
                         : "bg-white/5 border-white/10 shadow-blue-500/10"
                     )}>
                       {msg.role === 'user' 
-                        ? <User className="w-5 h-5 text-black" /> 
-                        : <Sparkles className="w-5 h-5 text-blue-400" />
+                        ? <User className="w-4 h-4 sm:w-5 sm:h-5 text-black" /> 
+                        : <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                       }
                     </div>
                     <div className="flex flex-col gap-2">
@@ -491,7 +507,7 @@ export default function App() {
                             <img 
                               src={msg.imageUrl} 
                               alt="Scene" 
-                              className="w-full h-auto object-cover max-h-[400px]"
+                              className="w-full h-auto object-cover max-h-[300px] sm:max-h-[400px]"
                               referrerPolicy="no-referrer"
                             />
                           </motion.div>
@@ -554,16 +570,19 @@ export default function App() {
               </div>
 
               {/* Input Area */}
-              <div className="p-8 border-t border-white/10 bg-black/60 backdrop-blur-2xl">
+              <div className="p-4 sm:p-8 border-t border-white/10 bg-black/60 backdrop-blur-2xl">
                 <form 
                   onSubmit={handleSendMessage}
                   className="relative max-w-4xl mx-auto flex items-center gap-4"
                 >
                   <div className="flex-1 relative group">
                     <input 
+                      ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ne yapmak istersin? (örn: Etrafa bak, kapıyı aç...)"
+                      placeholder="Ne yapmak istersin? (örn: Etrafa bak...)"
+                      enterKeyHint="send"
+                      autoComplete="off"
                       className={cn(
                         "w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-base focus:outline-none transition-all duration-500",
                         roleColor === 'emerald' && "focus:border-emerald-500/50 focus:bg-emerald-500/5",
