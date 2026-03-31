@@ -305,7 +305,7 @@ export default function App() {
                     key={role.id}
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => handleStartGame(role.id)}
+                    onTap={() => handleStartGame(role.id)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -315,7 +315,7 @@ export default function App() {
                     role="button"
                     tabIndex={0}
                     className={cn(
-                      "group relative p-8 bg-white/5 border border-white/10 rounded-[2rem] text-left transition-all duration-500 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20",
+                      "group relative p-8 bg-white/5 border border-white/10 rounded-[2rem] text-left transition-all duration-500 overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20 touch-manipulation",
                       role.color === 'emerald' && "hover:border-emerald-500/50 hover:bg-emerald-500/5",
                       role.color === 'amber' && "hover:border-amber-500/50 hover:bg-amber-500/5",
                       role.color === 'indigo' && "hover:border-indigo-500/50 hover:bg-indigo-500/5",
@@ -342,8 +342,8 @@ export default function App() {
                         )}>
                           <Sparkles className="w-6 h-6" />
                         </div>
-                        <button
-                          onClick={(e) => {
+                        <motion.button
+                          onTap={(e) => {
                             e.stopPropagation();
                             setShowRoleFact(showRoleFact === role.id ? null : role.id);
                           }}
@@ -356,7 +356,7 @@ export default function App() {
                             "w-4 h-4 transition-colors",
                             showRoleFact === role.id ? "text-white" : "text-zinc-500 group-hover/info:text-zinc-300"
                           )} />
-                        </button>
+                        </motion.button>
                       </div>
                       <h3 className="text-2xl font-bold mb-2 group-hover:tracking-tight transition-all">{role.name}</h3>
                       
