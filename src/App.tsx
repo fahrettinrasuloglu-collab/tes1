@@ -67,6 +67,7 @@ export default function App() {
   const [showRoleFact, setShowRoleFact] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isStartingRef = useRef(false);
 
   useEffect(() => {
     if (view === 'game') {
@@ -131,8 +132,13 @@ export default function App() {
   }, [gameState?.history]);
 
   const handleStartGame = async (roleId: string) => {
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
     console.log('Starting game for role:', roleId);
-    if (selectedRoleId) return;
+    if (selectedRoleId) {
+      isStartingRef.current = false;
+      return;
+    }
     setSelectedRoleId(roleId);
     setView('loading');
     try {
@@ -155,9 +161,12 @@ export default function App() {
       setView('game');
     } catch (error) {
       console.error("Oyun başlatılamadı:", error);
-      alert("Oyun başlatılırken bir sorun oluştu. Lütfen tekrar deneyin.");
+      const errorMessage = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
+      alert(`Oyun başlatılırken bir sorun oluştu: ${errorMessage}\nLütfen tekrar deneyin.`);
       setSelectedRoleId(null);
       setView('start');
+    } finally {
+      isStartingRef.current = false;
     }
   };
 
@@ -322,7 +331,6 @@ export default function App() {
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onTap={() => handleStartGame(role.id)}
-                    onClick={() => handleStartGame(role.id)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();

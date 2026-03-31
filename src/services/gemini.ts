@@ -53,26 +53,37 @@ export async function generateImage(prompt: string): Promise<string | undefined>
 }
 
 export async function generateScenario(role: string): Promise<Scenario> {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
-    Oyunun başlangıç senaryosunu, mekanını ve oyuncunun karşısındaki ilk durumu belirle. 
-    Bu oyun hem eğlenceli hem de bilgi verici olmalı. 
-    Yanıtını şu JSON formatında ver:
-    {
-      "location": "Mekan adı",
-      "description": "Mekan ve durum açıklaması",
-      "firstMessage": "Oyuncuya yönelik ilk diyalog",
-      "educationalFact": "Bu mekan veya rolle ilgili ilginç, gerçek bir bilgi",
-      "imagePrompt": "Bu başlangıç sahnesini betimleyen, görsel oluşturma yapay zekası için İngilizce bir prompt"
-    }`,
-    config: {
-      responseMimeType: "application/json",
-    },
-  });
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
+      Oyunun başlangıç senaryosunu, mekanını ve oyuncunun karşısındaki ilk durumu belirle. 
+      Bu oyun hem eğlenceli hem de bilgi verici olmalı. 
+      Yanıtını şu JSON formatında ver:
+      {
+        "location": "Mekan adı",
+        "description": "Mekan ve durum açıklaması",
+        "firstMessage": "Oyuncuya yönelik ilk diyalog",
+        "educationalFact": "Bu mekan veya rolle ilgili ilginç, gerçek bir bilgi",
+        "imagePrompt": "Bu başlangıç sahnesini betimleyen, görsel oluşturma yapay zekası için İngilizce bir prompt"
+      }`,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
 
-  return JSON.parse(response.text);
+    if (!response.text) {
+      throw new Error("AI yanıtı boş geldi.");
+    }
+
+    // JSON bazen markdown blokları içine sarılmış olabilir, temizleyelim
+    const cleanText = response.text.replace(/```json\n?|\n?```/g, "").trim();
+    return JSON.parse(cleanText);
+  } catch (error) {
+    console.error("Senaryo oluşturma hatası:", error);
+    throw error;
+  }
 }
 
 export async function chatWithAI(gameState: GameState, userInput: string): Promise<AIResponse> {
