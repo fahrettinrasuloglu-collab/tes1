@@ -56,7 +56,7 @@ export async function generateScenario(role: string): Promise<Scenario> {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-latest",
       contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
       Oyunun başlangıç senaryosunu, mekanını ve oyuncunun karşısındaki ilk durumu belirle. 
       Bu oyun hem eğlenceli hem de bilgi verici olmalı. 
@@ -77,9 +77,21 @@ export async function generateScenario(role: string): Promise<Scenario> {
       throw new Error("AI yanıtı boş geldi.");
     }
 
-    // JSON bazen markdown blokları içine sarılmış olabilir, temizleyelim
-    const cleanText = response.text.replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(cleanText);
+    let cleanText = response.text;
+    const firstBrace = cleanText.indexOf('{');
+    const lastBrace = cleanText.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+    } else {
+      cleanText = cleanText.replace(/```json\n?|\n?```/g, "").trim();
+    }
+
+    try {
+      return JSON.parse(cleanText);
+    } catch (e) {
+      console.error("JSON parse error for text:", response.text);
+      throw new Error("AI yanıtı geçerli bir JSON formatında değil.");
+    }
   } catch (error) {
     console.error("Senaryo oluşturma hatası:", error);
     throw error;
@@ -87,10 +99,11 @@ export async function generateScenario(role: string): Promise<Scenario> {
 }
 
 export async function chatWithAI(gameState: GameState, userInput: string): Promise<AIResponse> {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: [
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [
       { role: "user", parts: [{ text: `Sen dinamik bir macera oyununun yöneticisisin. 
       Oyuncu "${gameState.role}" rolünde ve "${gameState.location}" mekanında. 
       Oyuncunun eylemlerine mantıklı, eğlenceli ve sürükleyici tepkiler ver. 
@@ -118,4 +131,8 @@ export async function chatWithAI(gameState: GameState, userInput: string): Promi
   } catch (e) {
     return { text: response.text };
   }
+} catch (error) {
+  console.error("Chat error:", error);
+  throw error;
+}
 }

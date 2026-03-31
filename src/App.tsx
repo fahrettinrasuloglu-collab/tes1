@@ -65,6 +65,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [educationalFact, setEducationalFact] = useState<string | null>(null);
   const [showRoleFact, setShowRoleFact] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; details?: string } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isStartingRef = useRef(false);
@@ -141,6 +142,10 @@ export default function App() {
     }
     setSelectedRoleId(roleId);
     setView('loading');
+    
+    // Give UI time to render loading state
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     try {
       const role = ROLES.find(r => r.id === roleId)?.name || roleId;
       const scenario = await generateScenario(role);
@@ -162,7 +167,10 @@ export default function App() {
     } catch (error) {
       console.error("Oyun başlatılamadı:", error);
       const errorMessage = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
-      alert(`Oyun başlatılırken bir sorun oluştu: ${errorMessage}\nLütfen tekrar deneyin.`);
+      setError({ 
+        message: "Oyun başlatılırken bir sorun oluştu.", 
+        details: errorMessage 
+      });
       setSelectedRoleId(null);
       setView('start');
     } finally {
@@ -195,6 +203,11 @@ export default function App() {
       }) : null);
     } catch (error) {
       console.error("Mesaj gönderilemedi:", error);
+      const errorMessage = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
+      setError({ 
+        message: "Yanıt alınırken bir sorun oluştu.", 
+        details: errorMessage 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -202,6 +215,39 @@ export default function App() {
 
   return (
     <div className="h-[100dvh] bg-[#050505] text-zinc-100 font-sans selection:bg-white/20 overflow-hidden flex flex-col">
+      {/* Error Modal */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-zinc-900 border border-white/10 p-8 rounded-[2rem] max-w-md w-full text-center shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <RefreshCw className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-serif italic font-bold mb-4">{error.message}</h3>
+              <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                {error.details || "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin."}
+              </p>
+              <button
+                onClick={() => setError(null)}
+                className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors"
+              >
+                Anladım
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <AnimatePresence>
