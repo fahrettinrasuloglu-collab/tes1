@@ -217,8 +217,22 @@ export default function App() {
     }
   };
 
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+
+  useEffect(() => {
+    const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    if (!apiKey || apiKey === "undefined" || apiKey === "" || apiKey === "null") {
+      setIsApiKeyMissing(true);
+    }
+  }, []);
+
   return (
     <div className="h-[100dvh] bg-[#050505] text-zinc-100 font-sans selection:bg-white/20 overflow-hidden flex flex-col">
+      {isApiKeyMissing && (
+        <div className="bg-rose-600 text-white text-xs py-2 px-4 text-center z-[200] font-bold animate-pulse">
+          ⚠️ Gemini API Anahtarı Eksik! Lütfen Ayarlar (Settings) &gt; Secrets kısmından GEMINI_API_KEY ekleyin.
+        </div>
+      )}
       {/* Error Modal */}
       <AnimatePresence>
         {error && (
@@ -385,10 +399,12 @@ export default function App() {
                     key={role.id}
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => {
+                    onPointerDown={() => {
                       if (window.navigator.vibrate) {
                         window.navigator.vibrate(10);
                       }
+                    }}
+                    onClick={() => {
                       handleStartGame(role.id);
                     }}
                     onKeyDown={(e) => {
