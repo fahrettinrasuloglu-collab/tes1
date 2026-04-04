@@ -136,22 +136,22 @@ export default function App() {
     if (isStartingRef.current) return;
     isStartingRef.current = true;
     console.log('Starting game for role:', roleId);
-    if (selectedRoleId) {
-      isStartingRef.current = false;
-      return;
-    }
+    
     setSelectedRoleId(roleId);
     setView('loading');
     
     // Give UI time to render loading state
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     try {
+      console.log('Generating scenario...');
       const role = ROLES.find(r => r.id === roleId)?.name || roleId;
       const scenario = await generateScenario(role);
       
+      console.log('Generating initial image...');
       const initialImageUrl = await generateImage(scenario.imagePrompt);
       
+      console.log('Setting game state...');
       setGameState({
         role,
         location: scenario.location,
@@ -376,7 +376,12 @@ export default function App() {
                     key={role.id}
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onTap={() => handleStartGame(role.id)}
+                    onClick={() => {
+                      if (window.navigator.vibrate) {
+                        window.navigator.vibrate(10);
+                      }
+                      handleStartGame(role.id);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -485,7 +490,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col items-center justify-center p-6"
+              className="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center p-6"
             >
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 mb-12">
                 <div className={cn("absolute inset-0 border-4 rounded-full opacity-20", activeColors.border.replace('/30', ''))} />
