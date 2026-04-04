@@ -4,9 +4,11 @@ let aiInstance: GoogleGenAI | null = null;
 
 function getAI() {
   if (!aiInstance) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Gemini API anahtarı (GEMINI_API_KEY) bulunamadı. Lütfen AI Studio Ayarlar (Settings) menüsünden 'Secrets' kısmına bir API anahtarı ekleyin veya mevcut olanı kontrol edin.");
+    // Try process.env (Vite define) or import.meta.env (Vite standard)
+    const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey || apiKey === "undefined" || apiKey === "") {
+      throw new Error("Gemini API anahtarı (GEMINI_API_KEY) bulunamadı. Lütfen AI Studio'nun sol alt köşesindeki 'Settings' (Ayarlar) simgesine tıklayın ve 'Secrets' sekmesinden 'GEMINI_API_KEY' adında bir anahtar ekleyin.");
     }
     aiInstance = new GoogleGenAI({ apiKey });
   }
