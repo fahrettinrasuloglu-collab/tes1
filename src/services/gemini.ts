@@ -6,7 +6,7 @@ function getAI() {
   if (!aiInstance) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+      throw new Error("Gemini API anahtarı (GEMINI_API_KEY) bulunamadı. Lütfen AI Studio Ayarlar (Settings) menüsünden 'Secrets' kısmına bir API anahtarı ekleyin veya mevcut olanı kontrol edin.");
     }
     aiInstance = new GoogleGenAI({ apiKey });
   }
@@ -37,7 +37,7 @@ export async function generateImage(prompt: string): Promise<string | undefined>
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image",
+      model: "gemini-3-flash-preview",
       contents: [{ parts: [{ text: `A vibrant, cinematic, high-quality digital art scene for an RPG game: ${prompt}. Style: Atmospheric, detailed, immersive.` }] }],
     });
 
@@ -56,7 +56,7 @@ export async function generateScenario(role: string): Promise<Scenario> {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3-flash-preview",
       contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
       Oyunun başlangıç senaryosunu, mekanını ve oyuncunun karşısındaki ilk durumu belirle. 
       Bu oyun hem eğlenceli hem de bilgi verici olmalı. 
@@ -102,7 +102,7 @@ export async function chatWithAI(gameState: GameState, userInput: string): Promi
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3-flash-preview",
       contents: [
       { role: "user", parts: [{ text: `Sen dinamik bir macera oyununun yöneticisisin. 
       Oyuncu "${gameState.role}" rolünde ve "${gameState.location}" mekanında. 
