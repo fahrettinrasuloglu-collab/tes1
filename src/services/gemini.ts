@@ -4,11 +4,15 @@ let aiInstance: GoogleGenAI | null = null;
 
 function getAI() {
   if (!aiInstance) {
-    // Try process.env (Vite define) or import.meta.env (Vite standard)
-    const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    // Try multiple sources for the API key to ensure it's picked up on mobile/different environments
+    const apiKey = 
+      process.env.GEMINI_API_KEY || 
+      (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+      (window as any).GEMINI_API_KEY;
     
-    if (!apiKey || apiKey === "undefined" || apiKey === "") {
-      throw new Error("Gemini API anahtarı (GEMINI_API_KEY) bulunamadı. Lütfen AI Studio'nun sol alt köşesindeki 'Settings' (Ayarlar) simgesine tıklayın ve 'Secrets' sekmesinden 'GEMINI_API_KEY' adında bir anahtar ekleyin.");
+    if (!apiKey || apiKey === "undefined" || apiKey === "" || apiKey === "null") {
+      console.error("API Key missing. Checked process.env, import.meta.env, and window.");
+      throw new Error("Gemini API anahtarı (GEMINI_API_KEY) bulunamadı. Lütfen AI Studio'nun sol alt köşesindeki 'Settings' (Ayarlar) simgesine tıklayın ve 'Secrets' sekmesinden 'GEMINI_API_KEY' adında bir anahtar ekleyin. Ekledikten sonra sayfayı yenilemeyi unutmayın.");
     }
     aiInstance = new GoogleGenAI({ apiKey });
   }
@@ -39,7 +43,7 @@ export async function generateImage(prompt: string): Promise<string | undefined>
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-latest",
       contents: [{ parts: [{ text: `A vibrant, cinematic, high-quality digital art scene for an RPG game: ${prompt}. Style: Atmospheric, detailed, immersive.` }] }],
     });
 
@@ -58,7 +62,7 @@ export async function generateScenario(role: string): Promise<Scenario> {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-latest",
       contents: `Sen bir oyun yöneticisisin. Oyuncu "${role}" rolünü seçti. 
       Oyunun başlangıç senaryosunu, mekanını ve oyuncunun karşısındaki ilk durumu belirle. 
       Bu oyun hem eğlenceli hem de bilgi verici olmalı. 
@@ -80,19 +84,25 @@ export async function generateScenario(role: string): Promise<Scenario> {
     }
 
     let cleanText = response.text;
+    // Robust JSON extraction
     const firstBrace = cleanText.indexOf('{');
     const lastBrace = cleanText.lastIndexOf('}');
     if (firstBrace !== -1 && lastBrace !== -1) {
       cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-    } else {
-      cleanText = cleanText.replace(/```json\n?|\n?```/g, "").trim();
     }
 
     try {
       return JSON.parse(cleanText);
     } catch (e) {
-      console.error("JSON parse error for text:", response.text);
-      throw new Error("AI yanıtı geçerli bir JSON formatında değil.");
+      console.error("JSON parse error. Raw text:", response.text);
+      // Fallback if JSON parsing fails but we have some text
+      return {
+        location: "Bilinmeyen Mekan",
+        description: response.text.substring(0, 200),
+        firstMessage: "Macera başlıyor...",
+        educationalFact: "Bilgi yükleniyor...",
+        imagePrompt: "A mysterious adventure scene"
+      };
     }
   } catch (error) {
     console.error("Senaryo oluşturma hatası:", error);
@@ -104,7 +114,7 @@ export async function chatWithAI(gameState: GameState, userInput: string): Promi
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-latest",
       contents: [
       { role: "user", parts: [{ text: `Sen dinamik bir macera oyununun yöneticisisin. 
       Oyuncu "${gameState.role}" rolünde ve "${gameState.location}" mekanında. 
@@ -129,7 +139,13 @@ export async function chatWithAI(gameState: GameState, userInput: string): Promi
   });
 
   try {
-    return JSON.parse(response.text);
+    let cleanText = response.text;
+    const firstBrace = cleanText.indexOf('{');
+    const lastBrace = cleanText.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+    }
+    return JSON.parse(cleanText);
   } catch (e) {
     return { text: response.text };
   }

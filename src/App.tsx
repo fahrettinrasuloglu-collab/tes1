@@ -133,7 +133,11 @@ export default function App() {
   }, [gameState?.history]);
 
   const handleStartGame = async (roleId: string) => {
-    if (isStartingRef.current) return;
+    console.log('handleStartGame called with roleId:', roleId);
+    if (isStartingRef.current) {
+      console.log('Already starting, ignoring click');
+      return;
+    }
     isStartingRef.current = true;
     console.log('Starting game for role:', roleId);
     
@@ -236,6 +240,11 @@ export default function App() {
               <h3 className="text-2xl font-serif italic font-bold mb-4">{error.message}</h3>
               <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
                 {error.details || "Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin."}
+                {error.details?.includes("GEMINI_API_KEY") && (
+                  <span className="block mt-4 p-3 bg-white/5 rounded-lg border border-white/10 text-xs text-orange-400">
+                    İpucu: Sol alt köşedeki çark simgesine (Settings) tıklayıp 'Secrets' sekmesinden anahtarınızı ekleyebilirsiniz.
+                  </span>
+                )}
               </p>
               <button
                 onClick={() => setError(null)}
